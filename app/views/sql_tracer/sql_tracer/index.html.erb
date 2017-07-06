@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sql Tracer</title>
+  <link href='https://fonts.googleapis.com/css?family=Roboto:300,400,500,700' rel='stylesheet' type='text/css'>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+  <%= stylesheet_link_tag 'sql_tracer/application' %>
+</head>
+<body>
+
+<section class="jq22-container">
+  <div class="container">
+
+    <div class="row-fluid">
+      <div class="span12">
+        <div class="hero-unit">
+          <h1>
+            Sql Tracer
+          </h1>
+          <p>
+            It helps you figure out what sqls are executed and trace method call stack, you can take a look at
+            <a class="btn btn-primary btn-xs" target="_blank" href="https://github.com/zhangqibupt/sql_tracer">
+              Read Me</a>
+            to acquire more information.
+          </p>
+          <p>
+            If you have any questions or improvement, please open a issue.
+            <a class="btn btn-primary btn-xs" target="_blank" href="https://github.com/zhangqibupt/sql_tracer/issues/new">
+              New Issue
+            </a>
+          <p>
+            <button class="btn btn-xs btn-warning">
+              <span class="glyphicon glyphicon-refresh glyphicon-refresh-animate"></span> Watching...
+            </button>
+          </p>
+
+          </p>
+        </div>
+      </div>
+    </div>
+    <!-- end of #bs-collapse  -->
+  </div>
+
+
+  <div id="url_template" class="url_template">
+    <div class="panel-heading">
+      <h4 class="panel-title">
+        <a class="url_template_a" data-toggle="collapse" data-parent="#" href="#one">
+          <span class="badge"></span>
+        </a>
+      </h4>
+    </div>
+  </div>
+  <div id="sql_template" class="panel-heading sql_template">
+    <h4 class="panel-title">
+      <a data-toggle="collapse" data-parent="#" href="#one-2" class="sql">
+      </a>
+    </h4>
+  </div>
+  <div id="stack_info" class="panel-collapse collapse stack_info" style="display: none">
+    <div class="panel-body ruby">
+    </div>
+  </div>
+
+  <div id="sqls_template" style="display: none"></div>
+</section>
+
+<script src="https://code.jquery.com/jquery-1.12.4.min.js" integrity="sha256-ZosEbRLbNQzLpnKIkEdrPv7lOy9C27hHQ+Xp8a4MxAQ=" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+<script type="text/javascript">
+  $(document).ready(function() {
+    refresh();
+  });
+
+  function refresh() {
+    $.ajax({
+      url: "/sql_tracer/get_latest_stack_info",
+      success: function(result, status) {
+        if (result) {
+          $.each(result, function(index, requestInfo) {
+            appendRequestInfo(requestInfo);
+          });
+        }
+      },
+      complete: function() {
+        setTimeout("refresh()", 10000)
+      }
+    });
+  }
+
+  function appendRequestInfo(requestInfo) {
+    var url = requestInfo.url;
+    var sqls = requestInfo.sqls || [];
+    var $url_template = $("#url_template").clone();
+    $url_template.attr("id", "");
+    $url_template.find("a").attr("href", "#");
+    $url_template.find("a").prepend(url);
+    $url_template.find("span").html(sqls ? sqls.length : 0);
+    $url_template.css("display", "block");
+
+    var $sqls_template = $("#sqls_template").clone();
+    $sqls_template.attr("id", "");
+
+    if (sqls && sqls.length > 0) {
+      $.each(sqls, function(index, sql_info) {
+        var $stack_info = $("#stack_info").clone();
+        $stack_info.attr("id", "");
+        $stack_info.find("div").html(sql_info.stack.join("<br\/>"));
+
+        var $sql_template = $("#sql_template").clone();
+        $sql_template.attr("id", "");
+        $sql_template.find("a").attr("href", "#");
+        $sql_template.find("a").html(sql_info.sql);
+        $sql_template.find("a").click(function() {
+          if ($stack_info.is(":visible")) {
+            $sql_template.removeClass('active');
+          } else {
+            $sql_template.addClass('active');
+          }
+          $stack_info.slideToggle();
+        });
+        $sqls_template.append($sql_template);
+        $sqls_template.append($stack_info);
+      });
+    } else {
+      $sqls_template.html('No effective sqls are detected.')
+    }
+
+    $url_template.find("a").click(function() {
+      if ($sqls_template.is(":visible")) {
+        $url_template.find(".panel-heading:first").removeClass('active');
+      } else {
+        $url_template.find(".panel-heading:first").addClass('active');
+      }
+      $sqls_template.slideToggle();
+    });
+
+    $url_template.append($sqls_template);
+    $(".container").append($url_template);
+  }
+
+</script>
+</body>
+</html>
