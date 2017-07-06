@@ -1,16 +1,18 @@
 require 'active_record/connection_adapters/mysql2_adapter'
 
-module ActiveRecord::ConnectionAdapters
+module SqlTracer
   module Mysql2SqlLogger
-    def execute(*args)
-      SqlTracer::SqlLogger.log_sql(args.first)
-      super(*args)
+    extend ActiveSupport::Concern
+    included do
+      alias_method :execute_without_sql_tracer, :execute
+
+      def execute(*args)
+        SqlTracer::SqlLogger.log_sql(args.first)
+        execute_without_sql_tracer(*args)
+      end
     end
   end
-
-  class Mysql2Adapter
-    prepend Mysql2SqlLogger
-  end
-
 end
+
+ActiveRecord::ConnectionAdapters::Mysql2Adapter.send(:include, SqlTracer::Mysql2SqlLogger)
 
