@@ -2,7 +2,7 @@ module SqlTracer
   module Config
     DEFAULTS = {
       SQL_TRACER_SKIP_LIB_PATH: true, # method call paths in /.rvm directory won't be output, default true
-      SQL_TRACER_CONSOLE_OUTPUT_DISABLED: false, # sqls won't be output in back-end console if set to true, default false
+      SQL_TRACER_CONSOLE_OUTPUT_DISABLED: true, # sqls won't be output in back-end console if set to true
       SQL_TRACER_OUTPUT_SELECT_SQL_ENABLED: false, # output select type sql. By default, only (insert|update|delete) sql will be output
       # sql which contains any element of this array won't be output
       SQL_TRACER_SQL_FILTER: [],
@@ -14,7 +14,7 @@ module SqlTracer
 
     def self.get(name)
       @config ||= load_config
-      @config ? @config[name.to_s] : DEFAULTS[name]
+      (@config && @config[name.to_s]) ? @config[name.to_s] : DEFAULTS[name]
     end
 
     private
