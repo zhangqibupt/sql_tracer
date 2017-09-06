@@ -1,6 +1,7 @@
 Getting Started
 -------------------
-Quick Demo
+
+
 [![stack tracer](http://i2.kiimg.com/1949/fe060b70c2ad8d68.jpg)](http://recordit.co/8gnv8OR8vn)
 
 It is very easy to get started:
